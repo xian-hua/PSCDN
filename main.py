@@ -142,7 +142,7 @@ class Autoencoder(Model):
 
     def call(self, input):
         ouputenc = self.enc(input)
-        #         ouputenc = awgn(ouputenc,10)
+        ouputenc = awgn(ouputenc,10)#the commpy provide the source code of the AWGN channel
         ouputdec = self.dec(ouputenc)
         return ouputdec
 
