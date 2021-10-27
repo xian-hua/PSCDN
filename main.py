@@ -151,8 +151,59 @@ neurons = 64
 inbits = 9
 cbits = 2
 Autoencoder = Autoencoder(inbits, cbits, neurons)
-# Autoencoder.build(input_shape = (100,9,1))
-# Autoencoder.call(tf.keras.layers.Input(shape = (9,1)))
-# Autoencoder.summary()
 checkpoint_filepath = '2PSCDN/weight'
 Autoencoder.load_weights(checkpoint_filepath)
+mat = scipy.io.loadmat('train.mat')
+train_ori = mat['phasebit']
+train_ori = (np.reshape(train_ori, (train_ori.shape[0], train_ori.shape[1], 1)))
+train_ori = tf.dtypes.cast(train_ori, tf.float32)
+
+mat = scipy.io.loadmat('validation_csi.mat')
+test_ori = mat['phasebit']
+test_ori = (np.reshape(test_ori, (test_ori.shape[0], test_ori.shape[1], 1)))
+test_ori = tf.dtypes.cast(test_ori, tf.float32)
+
+checkpoint_filepath = '2PSCDN/weight'
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    save_weights_only=True,
+    monitor='val_loss',
+    mode='min',
+    save_best_only=True)
+initial_learning_rate = 0.001
+
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate,
+    decay_steps=1000,
+    decay_rate=0.99,
+    staircase=True)
+optimizer = Adam(learning_rate=lr_schedule)
+Autoencoder.compile(optimizer, loss=MSE())
+Autoencoder.fit(x=train_ori, y=train_ori, batch_size=128, epochs=1000, callbacks=[model_checkpoint_callback], validation_data=(test_ori, test_ori),
+                validation_batch_size=1000)
+checkpoint_filepath = '2PSCDN/weight'
+Autoencoder.load_weights(checkpoint_filepath)
+#for testing 
+import time
+from numpy.linalg import norm
+from numpy import arange,reshape,round,power
+
+
+matv = scipy.io.loadmat('test10w.mat')
+test_ori=matv['phasebit'] 
+phase=matv['phase'] 
+test_ori = (np.reshape(test_ori,(test_ori.shape[0],test_ori.shape[1],1)))
+test_ori = tf.dtypes.cast(test_ori, tf.float32)
+
+start1 = time.time()
+Encoder=Autoencoder.enc.predict(x=test_ori, batch_size=1000)
+end1 = time.time()
+
+nosie = awgn(Encoder,10)
+
+start2 = time.time()
+output = Autoencoder.dec.predict(x=nosie, batch_size=1000)
+end2 = time.time()
+
+nmse_round=power(norm(test_ori-output),2) / power(norm(test_ori),2)
+nmse_round
