@@ -218,9 +218,10 @@ optimizer = Adam(learning_rate=lr_schedule)
 Autoencoder.compile(optimizer, loss=MSE())
 Autoencoder.fit(x=train_ori, y=train_ori, batch_size=128, epochs=1000, callbacks=[model_checkpoint_callback], validation_data=(test_ori, test_ori),
                 validation_batch_size=1000)
+
+#for testing 
 checkpoint_filepath = '2PSCDN/weight'
 Autoencoder.load_weights(checkpoint_filepath)
-#for testing 
 import time
 from numpy.linalg import norm
 from numpy import arange,reshape,round,power
@@ -232,15 +233,8 @@ phase=matv['phase']
 test_ori = (np.reshape(test_ori,(test_ori.shape[0],test_ori.shape[1],1)))
 test_ori = tf.dtypes.cast(test_ori, tf.float32)
 
-start1 = time.time()
 Encoder=Autoencoder.enc.predict(x=test_ori, batch_size=1000)
-end1 = time.time()
-
 nosie = awgn(Encoder,10)
-
-start2 = time.time()
 output = Autoencoder.dec.predict(x=nosie, batch_size=1000)
-end2 = time.time()
-
 nmse_round=power(norm(test_ori-output),2) / power(norm(test_ori),2)
 nmse_round
