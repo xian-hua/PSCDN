@@ -188,8 +188,6 @@ neurons = 64
 inbits = 9
 cbits = 2
 Autoencoder = Autoencoder(inbits, cbits, neurons)
-checkpoint_filepath = '2PSCDN/weight'
-Autoencoder.load_weights(checkpoint_filepath)
 mat = scipy.io.loadmat('train.mat')
 train_ori = mat['phasebit']
 train_ori = (np.reshape(train_ori, (train_ori.shape[0], train_ori.shape[1], 1)))
